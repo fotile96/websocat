@@ -141,8 +141,9 @@ struct TransformPeer {
 impl Read for TransformPeer {
     fn read(&mut self, b: &mut [u8]) -> Result<usize, IoError> {
         let l = b.len();
+        let read_l = l - 128;
 
-        let n = match self.inner.read(&mut b[..l]) {
+        let n = match self.inner.read(&mut b[..read_l]) {
             Ok(x) => x,
             Err(e) => return Err(e),
         };

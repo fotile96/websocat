@@ -7,7 +7,7 @@ WORKDIR /src/websocat
 ENV RUSTFLAGS='-Ctarget-feature=-crt-static'
 
 COPY Cargo.toml Cargo.toml
-ARG CARGO_OPTS="--features=workaround1,seqpacket,prometheus_peer,prometheus/process,crypto_peer"
+ARG CARGO_OPTS="--features=workaround1,seqpacket,prometheus_peer,prometheus/process,crypto_peer,native_plugins"
 
 RUN mkdir src/ &&\
     echo "fn main() {println!(\"if you see this, the build broke\")}" > src/main.rs && \
