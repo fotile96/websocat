@@ -1,7 +1,7 @@
 # Build stage
-FROM rust:1.72-alpine3.18 as cargo-build
+FROM --platform=$TARGETPLATFORM rust:1.72-alpine3.18 as cargo-build
 
-RUN apk add --no-cache musl-dev pkgconfig openssl-dev
+RUN apk add --no-cache musl-dev pkgconfig openssl-dev cmake crypto++-dev gcc make g++
 
 WORKDIR /src/websocat
 ENV RUSTFLAGS='-Ctarget-feature=-crt-static'
@@ -18,12 +18,20 @@ COPY src src
 RUN cargo build --release $CARGO_OPTS && \
     strip target/release/websocat
 
-# Final stage
-FROM alpine:3.18
+# Compile plugin
 
-RUN apk add --no-cache libgcc
+COPY websocat-transform-plugin-chacha chacha
+RUN mkdir -p /src/websocat/chacha/build
+WORKDIR /src/websocat/chacha/build
+RUN cmake ../ -DCMAKE_BUILD_TYPE=Release && make
+
+# Final stage
+FROM --platform=$TARGETPLATFORM alpine:3.18
+
+RUN apk add --no-cache libgcc crypto++
 
 WORKDIR /
 COPY --from=cargo-build /src/websocat/target/release/websocat /usr/local/bin/
+COPY --from=cargo-build /src/websocat/chacha/build/libfoo.so /
 
-ENTRYPOINT ["/usr/local/bin/websocat"]
+ENTRYPOINT ["/usr/local/bin/websocat", "--native-plugin-a", "enc@/libfoo.so", "--native-plugin-b", "dec@/libfoo.so"]

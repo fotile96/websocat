@@ -1,0 +1,5 @@
+[submodule "."]
+	url = https://github.com/fotile96/websocat-transform-plugin-chacha
+[submodule "websocat-transform-plugin-chacha"]
+	path = websocat-transform-plugin-chacha
+	url = https://github.com/fotile96/websocat-transform-plugin-chacha
