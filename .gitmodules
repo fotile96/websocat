@@ -3,3 +3,6 @@
 [submodule "websocat-transform-plugin-chacha"]
 	path = websocat-transform-plugin-chacha
 	url = https://github.com/fotile96/websocat-transform-plugin-chacha
+[submodule "raw-tcp-hole-punching"]
+	path = raw-tcp-hole-punching
+	url = https://github.com/fotile96/raw-tcp-hole-punching
