@@ -20,6 +20,8 @@ use super::L2rUser;
 use super::{box_up_err, peer_err_s, wouldblock, BoxedNewPeerFuture, BoxedNewPeerStream, Peer};
 use super::{multi, once, ConstructParams, Options, PeerConstructor, Specifier};
 
+use net2::unix::UnixTcpBuilderExt;
+
 #[derive(Debug, Clone)]
 pub struct TcpConnect(pub Vec<SocketAddr>);
 impl Specifier for TcpConnect {
@@ -50,11 +52,11 @@ Example: redirect websocket connections to local SSH server over IPv6
 "#
 );
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TcpListen(pub SocketAddr);
 impl Specifier for TcpListen {
     fn construct(&self, p: ConstructParams) -> PeerConstructor {
-        multi(tcp_listen_peer(&self.0, p.left_to_right, p.program_options.announce_listens))
+        multi(tcp_listen_peer(&self.0, p.left_to_right, p.program_options.announce_listens, p.program_options.tcp_reuseport))
     }
     specifier_boilerplate!(noglobalstate multiconnect no_subspec );
 }
@@ -241,8 +243,28 @@ pub fn tcp_connect_peer(addrs: &[SocketAddr]) -> BoxedNewPeerFuture {
     Box::new(p) as BoxedNewPeerFuture
 }
 
-pub fn tcp_listen_peer(addr: &SocketAddr, l2r: L2rUser, announce: bool) -> BoxedNewPeerStream {
-    let bound = match TcpListener::bind(&addr) {
+pub fn tcp_listen_peer(addr: &SocketAddr, l2r: L2rUser, announce: bool, reuseport: bool) -> BoxedNewPeerStream {
+    let builder = match net2::TcpBuilder::new_v4() {
+        Ok(x) => x,
+        Err(e) => return peer_err_s(e),
+    };
+    let builder = match builder.reuse_address(true) {
+        Ok(x) => x,
+        Err(e) => return peer_err_s(e),
+    };
+    let builder = match builder.reuse_port(reuseport) {
+        Ok(x) => x,
+        Err(e) => return peer_err_s(e),
+    };
+    let builder = match builder.bind(&addr) {
+        Ok(x) => x,
+        Err(e) => return peer_err_s(e),
+    };
+    let bound = match builder.listen(42) {
+        Ok(x) => x,
+        Err(e) => return peer_err_s(e),
+    };
+    let bound = match TcpListener::from_std(bound, &tokio::reactor::Handle::default()) {
         Ok(x) => x,
         Err(e) => return peer_err_s(e),
     };

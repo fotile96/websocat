@@ -163,6 +163,9 @@ struct Opt {
     #[structopt(long="udp-reuseaddr")]
     udp_reuseaddr: bool,
 
+    #[structopt(long="tcp-reuseport")]
+    tcp_reuseport: bool,
+
     #[structopt(
         long = "unlink",
         help = "[A] Unlink listening UNIX socket before binding to it"
@@ -882,6 +885,7 @@ fn run() -> Result<()> {
             udp_join_multicast_iface_v4
             udp_join_multicast_iface_v6
             udp_reuseaddr
+            tcp_reuseport
             unidirectional
             unidirectional_reverse
             exit_on_eof
