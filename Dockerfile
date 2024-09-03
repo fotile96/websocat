@@ -46,4 +46,6 @@ COPY --from=cargo-build /src/websocat/chacha/build/libfoo.so /
 COPY --from=cargo-build /src/websocat/raw/main /raw
 COPY --from=cargo-build /src/websocat/raw/raw.sh /raw.sh
 
+RUN apk add --no-cache bcc-tools python3 py3-psutil py3-pyroute2
+
 ENTRYPOINT ["/usr/local/bin/websocat", "-e", "--native-plugin-a", "enc@/libfoo.so", "--native-plugin-b", "dec@/libfoo.so"]
